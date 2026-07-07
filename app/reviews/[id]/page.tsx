@@ -21,25 +21,25 @@ interface Comment {
 }
 
 async function getReview(id: string): Promise<Comment> {
-  // cache: 'no-store' ensures no HTTP-level caching either.
   const res = await fetch(`https://jsonplaceholder.typicode.com/comments/${id}`, {
-    cache: 'no-store',
+    next: { revalidate: 1 },
   });
   if (!res.ok) throw new Error(`Review not found (HTTP ${res.status})`);
   return res.json();
 }
 
 export default async function ReviewPage({ params }: { params: { id: string } }) {
+  const { id } = params;
   let review: Comment | null = null;
   let fetchError: string | null = null;
 
   try {
-    review = await getReview(params.id);
+    review = await getReview(id);
   } catch (err) {
     fetchError = String(err);
   }
 
-  const stars = ((parseInt(params.id) % 5) + 1);
+  const stars = ((parseInt(id) % 5) + 1);
 
   return (
     <main style={styles.main}>
@@ -67,7 +67,7 @@ export default async function ReviewPage({ params }: { params: { id: string } })
               {'★'.repeat(stars)}{'☆'.repeat(5 - stars)}
             </div>
           </div>
-          <p style={styles.reviewId}>Review #{params.id} · Product #{review?.postId}</p>
+          <p style={styles.reviewId}>Review #{id} · Product #{review?.postId}</p>
           <p style={styles.body}>{review?.body}</p>
           <div style={styles.verified}>✔ Verified Purchase</div>
         </div>
